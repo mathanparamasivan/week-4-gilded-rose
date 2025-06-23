@@ -1,0 +1,126 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'pmd'
+    id 'jacoco'
+    id 'com.github.spotbugs' version '6.0.13'
+    id 'org.owasp.dependencycheck' version '8.4.3'
+    // id 'org.owasp.dependencycheck' version '8.2.3'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.6.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.7.3'
+}
+
+group = 'com.gildedrose'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+task texttest(type: JavaExec) {
+    main = "com.gildedrose.TexttestFixture"
+    classpath = sourceSets.test.runtimeClasspath
+    args "30"
+}
+
+// Checkstyle configuration
+checkstyle {
+    toolVersion = '10.12.5'
+    configFile = file('google_checks.xml')
+    maxWarnings = 0
+}
+
+// PMD configuration
+pmd {
+    toolVersion = '6.55.0'
+    consoleOutput = true
+    ruleSetFiles = files()
+    ruleSets = [
+        'category/java/bestpractices.xml',
+        'category/java/codestyle.xml',
+        'category/java/design.xml',
+        'category/java/documentation.xml',
+        'category/java/errorprone.xml',
+        'category/java/multithreading.xml',
+        'category/java/performance.xml',
+        'category/java/security.xml'
+    ]
+}
+
+// SpotBugs configuration
+spotbugs {
+    toolVersion = '4.8.3'
+    ignoreFailures = false
+    excludeFilter = file('spotbugs-exclude.xml')
+}
+
+spotbugsMain {
+    reports {
+        html {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+        xml {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/main/spotbugs.xml")
+        }
+    }
+}
+
+spotbugsTest {
+    reports {
+        html {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/test/spotbugs.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+        xml {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/test/spotbugs.xml")
+        }
+    }
+}
+
+// JaCoCo configuration
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+// OWASP Dependency Check configuration
+dependencyCheck {
+    failBuildOnCVSS = 7
+    suppressionFile = 'dependency-check-suppressions.xml'
+    analyzers {
+        assemblyEnabled = false
+    }
+}
